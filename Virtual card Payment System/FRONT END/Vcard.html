@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link rel="stylesheet" as="style" onload="this.rel='stylesheet'" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style>
+        .active-nav {
+            background-color: #f0f2f4;
+            border-left: 3px solid #1380ec;
+        }
+        .stat-card {
+            transition: transform 0.2s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .action-link {
+            color: #1380ec;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .action-link:hover {
+            text-decoration: underline;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .hidden {
+            display: none;
+        }
+        .btn-primary {
+            background-color: #1380ec;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #f0f2f4;
+            color: #111418;
+        }
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        /* Form Styles */
+        .modal-form {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1380ec;
+            box-shadow: 0 0 0 2px rgba(19, 128, 236, 0.1);
+        }
+
+        .form-group textarea {
+            height: 80px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .submit-btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .submit-btn:hover {
+            background: #0056b3;
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .cancel-btn:hover {
+            background: #545b62;
+        }
+
+        /* User List Styles */
+        .users-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .user-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+
+        .user-item:hover {
+            background: #f8f9fa;
+        }
+
+        .user-item.selected {
+            background: #007bff;
+            color: white;
+        }
+
+        .user-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .user-item.selected .user-email {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .user-role {
+            font-size: 12px;
+            padding: 4px 8px;
+            background: #f0f2f4;
+            border-radius: 4px;
+            color: #333;
+        }
+
+        .user-item.selected .user-role {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        /* Search Input */
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1380ec;
+            box-shadow: 0 0 0 2px rgba(19, 128, 236, 0.1);
+        }
+
+        /* Hide category options based on type */
+        .income-option, .expense-option, .both-option {
+            display: none;
+        }
+
+        .income-option.visible, .expense-option.visible, .both-option.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-white" style='font-family: Inter, "Noto Sans", sans-serif;'>
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <div class="w-80 bg-white shadow-md">
+            <div class="flex h-full min-h-[700px] flex-col justify-between bg-white p-4">
+                <div class="flex flex-col gap-4">
+                    <div class="flex gap-3">
+                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAA2Hv3DkaxEEAQFAbxeZKv6GM80oDWSjolycop9jLJstS6Gar-E8iw3xZsiZREvzhw-1Ni9S5I1JfGNsCV9nD7JhbEHddYFxPA1BpkRX1ROpS7oFwrBzRvhLhHnPYMq_AmdnLQ6M_MowrJRClG1QtFZaGueG9rc3fzli0qvX37S-L6_nKLPpcxogouUQnd7Qbitife3g5XrAqwgEyTsfblc-UdSC8jAIY-6u7mdBvoOE9xcMdm4xJAH32AOrFzWzNoFDAR5O7I8w");'></div>
+                        <h1 class="text-[#111418] text-base font-medium leading-normal">Admin</h1>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <a href="#dashboard" class="flex items-center gap-3 px-3 py-2 rounded-lg nav-item">
+                            <div class="text-[#111418]" data-icon="House" data-size="24px" data-weight="regular">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-[#111418] text-sm font-medium leading-normal">Dashboard</p>
+                        </a>
+                        <a href="#users" class="flex items-center gap-3 px-3 py-2 rounded-lg nav-item">
+                            <div class="text-[#111418]" data-icon="Users" data-size="24px" data-weight="fill">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M164.47,195.63a8,8,0,0,1-6.7,12.37H10.23a8,8,0,0,1-6.7-12.37,95.83,95.83,0,0,1,47.22-37.71,60,60,0,1,1,66.5,0A95.83,95.83,0,0,1,164.47,195.63Zm87.91-.15a95.87,95.87,0,0,0-47.13-37.56A60,60,0,0,0,144.7,54.59a4,4,0,0,0-1.33,6A75.83,75.83,0,0,1,147,150.53a4,4,0,0,0,1.07,5.53,112.32,112.32,0,0,1,29.85,30.83,23.92,23.92,0,0,1,3.65,16.47a4,4,0,0,0,3.95,4.64h60.3a8,8,0,0,0,7.73-5.93A8.22,8.22,0,0,0,252.38,195.48Z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-[#111418] text-sm font-medium leading-normal">Users</p>
+                        </a>
+                        <a href="#cards" class="flex items-center gap-3 px-3 py-2 rounded-lg active-nav nav-item">
+                            <div class="text-[#111418]" data-icon="CreditCard" data-size="24px" data-weight="fill">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM136,176H120a8,8,0,0,1,0-16h16a8,8,0,0,1,0,16Zm64,0H168a8,8,0,0,1,0-16h32a8,8,0,0,1,0,16ZM32,88V64H224V88Z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-[#111418] text-sm font-medium leading-normal">Cards</p>
+                        </a>
+                        <a href="#settings" class="flex items-center gap-3 px-3 py-2 rounded-lg nav-item">
+                            <div class="text-[#111418]" data-icon="Gear" data-size="24px" data-weight="regular">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"></path>
+                                </svg>
+                            </div>
+                            <p class="text-[#111418] text-sm font-medium leading-normal">Settings</p>
+                        </a>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <a href="#support" class="flex items-center gap-3 px-3 py-2 rounded-lg nav-item">
+                        <div class="text-[#111418]" data-icon="Question" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M140,180a12,12,0,1,1-12-12A12,12,0,0,1,140,180ZM128,72c-22.06,0-40,16.15-40,36v4a8,8,0,0,0,16,0v-4c0-11,10.77-20,24-20s24,9,24,20-10.77,20-24,20a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-.72c18.24-3.35,32-17.9,32-35.28C168,88.15,150.06,72,128,72Zm104,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"></path>
+                            </svg>
+                        </div>
+                        <p class="text-[#111418] text-sm font-medium leading-normal">Support</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-auto">
+            <!-- Dashboard Page -->
+            <div id="dashboard" class="page">
+                <div class="flex flex-wrap justify-between gap-3 p-4"><p class="text-[#111418] tracking-light text-[32px] font-bold leading-tight min-w-72">Dashboard</p></div>
+                <div class="flex flex-wrap gap-4 p-4">
+                    <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-[#f0f2f4] stat-card">
+                        <p class="text-[#111418] text-base font-medium leading-normal">Total Users</p>
+                        <p class="text-[#111418] tracking-light text-2xl font-bold leading-tight">1,234</p>
+                        <p class="text-[#078838] text-base font-medium leading-normal">+12%</p>
+                    </div>
+                    <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-[#f0f2f4] stat-card">
+                        <p class="text-[#111418] text-base font-medium leading-normal">Active Users</p>
+                        <p class="text-[#111418] tracking-light text-2xl font-bold leading-tight">876</p>
+                        <p class="text-[#078838] text-base font-medium leading-normal">+8%</p>
+                    </div>
+                    <div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 bg-[#f0f2f4] stat-card">
+                        <p class="text-[#111418] text-base font-medium leading-normal">New Users</p>
+                        <p class="text-[#111418] tracking-light text-2xl font-bold leading-tight">123</p>
+                        <p class="text-[#078838] text-base font-medium leading-normal">+5%</p>
+                    </div>
+                </div>
+                <h2 class="text-[#111418] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Recent Activity</h2>
+                <div class="px-4 py-3">
+                    <div class="flex overflow-hidden rounded-lg border border-[#dbe0e6] bg-white">
+                        <table class="flex-1 w-full">
+                            <thead>
+                                <tr class="bg-white">
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">User</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Action</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#111418] text-sm font-normal leading-normal">Liam Harper</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal action-link">User logged in</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">2023-11-15 10:00 AM</td>
+                                </tr>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#111418] text-sm font-normal leading-normal">Olivia Bennett</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal action-link">Card created</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">2023-11-15 11:30 AM</td>
+                                </tr>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#111418] text-sm font-normal leading-normal">Noah Carter</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal action-link">User profile updated</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">2023-11-15 12:45 PM</td>
+                                </tr>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#111418] text-sm font-normal leading-normal">Ava Morgan</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal action-link">Support ticket submitted</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">2023-11-15 02:15 PM</td>
+                                </tr>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#111418] text-sm font-normal leading-normal">Ethan Parker</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal action-link">Settings updated</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">2023-11-15 03:30 PM</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Page -->
+            <div id="users" class="page">
+                <div class="flex flex-wrap justify-between gap-3 p-4">
+                    <div class="flex min-w-72 flex-col gap-3">
+                        <p class="text-[#111418] tracking-light text-[32px] font-bold leading-tight">Users</p>
+                        <p class="text-[#617589] text-sm font-normal leading-normal">Manage your users and their permissions</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="btn-primary flex items-center justify-center rounded-lg h-10 px-4 text-sm font-bold leading-normal">
+                            <span>View All Users</span>
+                        </button>
+                        <button class="btn-secondary flex items-center justify-center rounded-lg h-10 px-4 text-sm font-bold leading-normal" onclick="openUserSelectionModal()">
+                            <span>View Single User</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- User Details Display Area -->
+                <div class="user-details-container" id="userDetailsContainer">
+                    <!-- Selected user details will appear here -->
+                </div>
+
+                <div class="px-4 py-3">
+                    <label class="flex flex-col min-w-40 h-12 w-full">
+                        <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+                            <div class="text-[#617589] flex border-none bg-[#f0f2f4] items-center justify-center pl-4 rounded-l-lg border-r-0" data-icon="MagnifyingGlass" data-size="24px" data-weight="regular">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+                                </svg>
+                            </div>
+                            <input placeholder="Search users" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] focus:outline-0 focus:ring-0 border-none bg-[#f0f2f4] focus:border-none h-full placeholder:text-[#617589] px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" value="" />
+                        </div>
+                    </label>
+                </div>
+                <div class="px-4 py-3">
+                    <div class="flex overflow-hidden rounded-lg border border-[#dbe0e6] bg-white">
+                        <table class="flex-1 w-full">
+                            <thead>
+                                <tr class="bg-white">
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Name</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Email</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Role</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Status</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#111418] text-sm font-normal leading-normal">Ethan Carter</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">ethan.carter@example.com</td>
+                                    <td class="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+                                        <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-medium leading-normal w-full">
+                                            <span class="truncate">Admin</span>
+                                        </button>
+                                    </td>
+                                    <td class="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+                                        <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-medium leading-normal w-full">
+                                            <span class="truncate">Active</span>
+                                        </button>
+                                    </td>
+                                    <td class="h-[72px] px-4 py-2 flex gap-2">
+                                        <button class="action-link text-sm font-bold leading-normal tracking-[0.015em] px-3 py-1 rounded border border-[#1380ec]">
+                                            View
+                                        </button>
+                                        <button class="btn-danger text-sm font-bold leading-normal tracking-[0.015em] px-3 py-1 rounded">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#111418] text-sm font-normal leading-normal">Olivia Bennett</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">olivia.bennett@example.com</td>
+                                    <td class="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+                                        <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-medium leading-normal w-full">
+                                            <span class="truncate">Editor</span>
+                                        </button>
+                                    </td>
+                                    <td class="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+                                        <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-medium leading-normal w-full">
+                                            <span class="truncate">Active</span>
+                                        </button>
+                                    </td>
+                                    <td class="h-[72px] px-4 py-2 flex gap-2">
+                                        <button class="action-link text-sm font-bold leading-normal tracking-[0.015em] px-3 py-1 rounded border border-[#1380ec]">
+                                            View
+                                        </button>
+                                        <button class="btn-danger text-sm font-bold leading-normal tracking-[0.015em] px-3 py-1 rounded">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#111418] text-sm font-normal leading-normal">Liam Harper</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">liam.harper@example.com</td>
+                                    <td class="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+                                        <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-medium leading-normal w-full">
+                                            <span class="truncate">Viewer</span>
+                                        </button>
+                                    </td>
+                                    <td class="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+                                        <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-medium leading-normal w-full">
+                                            <span class="truncate">Inactive</span>
+                                        </button>
+                                    </td>
+                                    <td class="h-[72px] px-4 py-2 flex gap-2">
+                                        <button class="action-link text-sm font-bold leading-normal tracking-[0.015em] px-3 py-1 rounded border border-[#1380ec]">
+                                            View
+                                        </button>
+                                        <button class="btn-danger text-sm font-bold leading-normal tracking-[0.015em] px-3 py-1 rounded">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cards Page -->
+            <div id="cards" class="page active">
+                <div class="flex flex-wrap justify-between gap-3 p-4">
+                    <div class="flex min-w-72 flex-col gap-3">
+                        <p class="text-[#111418] tracking-light text-[32px] font-bold leading-tight">Cards</p>
+                        <p class="text-[#617589] text-sm font-normal leading-normal">Manage all cards and transactions in the system</p>
+                    </div>
+                    <div class="flex gap-3 flex-wrap">
+                        <button class="btn-primary flex items-center justify-center rounded-lg h-10 px-4 text-sm font-bold leading-normal" onclick="openTransactionModal()">
+                            <span>Add Transaction</span>
+                        </button>
+                        <button class="btn-secondary flex items-center justify-center rounded-lg h-10 px-4 text-sm font-bold leading-normal">
+                            <span>View All Transactions</span>
+                        </button>
+                        <div class="relative">
+                            <select class="btn-secondary flex items-center justify-center rounded-lg h-10 px-4 text-sm font-bold leading-normal appearance-none pr-8">
+                                <option value="">View User Transactions</option>
+                                <option value="user1">Ethan Carter</option>
+                                <option value="user2">Olivia Bennett</option>
+                                <option value="user3">Liam Harper</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-4 py-3">
+                    <label class="flex flex-col min-w-40 h-12 w-full">
+                        <div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+                            <div class="text-[#617589] flex border-none bg-[#f0f2f4] items-center justify-center pl-4 rounded-l-lg border-r-0" data-icon="MagnifyingGlass" data-size="24px" data-weight="regular">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+                                </svg>
+                            </div>
+                            <input placeholder="Search cards" class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] focus:outline-0 focus:ring-0 border-none bg-[#f0f2f4] focus:border-none h-full placeholder:text-[#617589] px-4 rounded-l-none border-l-0 pl-2 text-base font-normal leading-normal" value="" />
+                        </div>
+                    </label>
+                </div>
+                <div class="px-4 py-3">
+                    <div class="flex overflow-hidden rounded-lg border border-[#dbe0e6] bg-white">
+                        <table class="flex-1 w-full">
+                            <thead>
+                                <tr class="bg-white">
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Card ID</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">User</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Type</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Status</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Created At</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">12345</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">Alice Johnson</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">Credit</td>
+                                    <td class="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+                                        <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-medium leading-normal w-full">
+                                            <span class="truncate">Active</span>
+                                        </button>
+                                    </td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">2023-01-15</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-bold leading-normal tracking-[0.015em] action-link">View</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settings" class="page">
+                <div class="flex flex-wrap justify-between gap-3 p-4">
+                    <div class="flex min-w-72 flex-col gap-3">
+                        <p class="text-[#111418] tracking-light text-[32px] font-bold leading-tight">System Settings</p>
+                        <p class="text-[#617589] text-sm font-normal leading-normal">Configure global application settings, permissions, and integrations.</p>
+                    </div>
+                </div>
+                <h2 class="text-[#111418] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">General Settings</h2>
+                <div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                    <label class="flex flex-col min-w-40 flex-1">
+                        <p class="text-[#111418] text-base font-medium leading-normal pb-2">Application Name</p>
+                        <input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] focus:outline-0 focus:ring-0 border border-[#dbe0e6] bg-white focus:border-[#dbe0e6] h-14 placeholder:text-[#617589] p-[15px] text-base font-normal leading-normal" value="Admin Dashboard" />
+                    </label>
+                </div>
+                <div class="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
+                    <label class="flex flex-col min-w-40 flex-1">
+                        <p class="text-[#111418] text-base font-medium leading-normal pb-2">Default Language</p>
+                        <input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] focus:outline-0 focus:ring-0 border border-[#dbe0e6] bg-white focus:border-[#dbe0e6] h-14 placeholder:text-[#617589] p-[15px] text-base font-normal leading-normal" value="English" />
+                    </label>
+                </div>
+                <h2 class="text-[#111418] text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">User Permissions</h2>
+                <div class="px-4">
+                    <label class="flex gap-x-3 py-3 flex-row">
+                        <input type="checkbox" class="h-5 w-5 rounded border-[#dbe0e6] border-2 bg-transparent text-[#1380ec] checked:bg-[#1380ec] checked:border-[#1380ec] focus:ring-0 focus:ring-offset-0 focus:border-[#dbe0e6] focus:outline-none" checked />
+                        <p class="text-[#111418] text-base font-normal leading-normal">Allow users to create new projects</p>
+                    </label>
+                    <label class="flex gap-x-3 py-3 flex-row">
+                        <input type="checkbox" class="h-5 w-5 rounded border-[#dbe0e6] border-2 bg-transparent text-[#1380ec] checked:bg-[#1380ec] checked:border-[#1380ec] focus:ring-0 focus:ring-offset-0 focus:border-[#dbe0e6] focus:outline-none" checked />
+                        <p class="text-[#111418] text-base font-normal leading-normal">Allow users to invite team members</p>
+                    </label>
+                    <label class="flex gap-x-3 py-3 flex-row">
+                        <input type="checkbox" class="h-5 w-5 rounded border-[#dbe0e6] border-2 bg-transparent text-[#1380ec] checked:bg-[#1380ec] checked:border-[#1380ec] focus:ring-0 focus:ring-offset-0 focus:border-[#dbe0e6] focus:outline-none" />
+                        <p class="text-[#111418] text-base font-normal leading-normal">Allow users to delete projects</p>
+                    </label>
+                </div>
+                <div class="flex px-4 py-3 justify-end">
+                    <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#1380ec] text-white text-sm font-bold leading-normal tracking-[0.015em]">
+                        <span class="truncate">Save Settings</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Support Page -->
+            <div id="support" class="page">
+                <div class="flex flex-wrap justify-between gap-3 p-4">
+                    <p class="text-[#111418] tracking-light text-[32px] font-bold leading-tight min-w-72">Support Tickets</p>
+                </div>
+                <div class="px-4 py-3">
+                    <div class="flex overflow-hidden rounded-lg border border-[#dbe0e6] bg-white">
+                        <table class="flex-1 w-full">
+                            <thead>
+                                <tr class="bg-white">
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Ticket ID</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Subject</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Status</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Submitted By</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Date</th>
+                                    <th class="px-4 py-3 text-left text-[#111418] text-sm font-medium leading-normal">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-t border-t-[#dbe0e6]">
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">#12345</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">Issue with transaction</td>
+                                    <td class="h-[72px] px-4 py-2 text-sm font-normal leading-normal">
+                                        <button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-8 px-4 bg-[#f0f2f4] text-[#111418] text-sm font-medium leading-normal w-full">
+                                            <span class="truncate">Open</span>
+                                        </button>
+                                    </td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">Sarah Johnson</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-normal leading-normal">2023-08-15</td>
+                                    <td class="h-[72px] px-4 py-2 text-[#617589] text-sm font-bold leading-normal tracking-[0.015em] action-link">View</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Selection Modal -->
+    <div class="modal-overlay" id="userSelectionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Select User to View</h3>
+                <button class="close-btn" onclick="closeUserSelectionModal()">&times;</button>
+            </div>
+            
+            <div class="modal-form">
+                <input type="text" id="userSearchModal" class="search-input" placeholder="Search users..." onkeyup="filterUsersModal()">
+                
+                <div class="users-list" id="usersListModal">
+                    <!-- Users will be dynamically loaded here -->
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeUserSelectionModal()" class="cancel-btn">Cancel</button>
+                    <button type="button" onclick="viewSelectedUserModal()" class="submit-btn">View User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="modal-overlay" id="transactionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Transaction</h3>
+                <button class="close-btn" onclick="closeTransactionModal()">&times;</button>
+            </div>
+            
+            <form id="transactionForm" onsubmit="submitTransaction(event)" class="modal-form">
+                <div class="form-group">
+                    <label for="userSelect">Select User *</label>
+                    <select id="userSelect" required>
+                        <option value="">Choose a user...</option>
+                        <!-- Users will be dynamically loaded here -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="transactionType">Transaction Type *</label>
+                    <select id="transactionType" required>
+                        <option value="">Select type...</option>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount">Amount ($) *</label>
+                    <input type="number" id="amount" step="0.01" min="0" placeholder="0.00" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="category">Category *</label>
+                    <select id="category" required>
+                        <option value="">Select category...</option>
+                        <option value="salary" class="income-option">Salary</option>
+                        <option value="freelance" class="income-option">Freelance</option>
+                        <option value="investment" class="income-option">Investment</option>
+                        <option value="food" class="expense-option">Food & Dining</option>
+                        <option value="transport" class="expense-option">Transportation</option>
+                        <option value="utilities" class="expense-option">Utilities</option>
+                        <option value="entertainment" class="expense-option">Entertainment</option>
+                        <option value="shopping" class="expense-option">Shopping</option>
+                        <option value="healthcare" class="expense-option">Healthcare</option>
+                        <option value="education" class="expense-option">Education</option>
+                        <option value="other" class="both-option">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" placeholder="Enter transaction description..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="transactionDate">Date *</label>
+                    <input type="date" id="transactionDate" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" onclick="closeTransactionModal()" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="submit-btn">Add Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Mock user data
+        const allUsers = [
+            { id: 1, name: 'John Doe', email: 'john@example.com', role: 'user', is_active: true, created_at: '2024-01-01' },
+            { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'admin', is_active: true, created_at: '2024-01-02' },
+            { id: 3, name: 'Mike Johnson', email: 'mike@example.com', role: 'user', is_active: false, created_at: '2024-01-03' },
+            { id: 4, name: 'Ethan Carter', email: 'ethan.carter@example.com', role: 'admin', is_active: true, created_at: '2024-01-04' },
+            { id: 5, name: 'Olivia Bennett', email: 'olivia.bennett@example.com', role: 'editor', is_active: true, created_at: '2024-01-05' },
+            { id: 6, name: 'Liam Harper', email: 'liam.harper@example.com', role: 'viewer', is_active: false, created_at: '2024-01-06' },
+            { id: 7, name: 'Alice Johnson', email: 'alice@example.com', role: 'user', is_active: true, created_at: '2024-01-07' },
+            { id: 8, name: 'Bob Wilson', email: 'bob@example.com', role: 'user', is_active: true, created_at: '2024-01-08' }
+        ];
+
+        let selectedUserId = null;
+
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle navigation clicks
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all nav items
+                    document.querySelectorAll('.nav-item').forEach(nav => {
+                        nav.classList.remove('active-nav');
+                    });
+                    
+                    // Add active class to clicked nav item
+                    this.classList.add('active-nav');
+                    
+                    // Hide all pages
+                    document.querySelectorAll('.page').forEach(page => {
+                        page.classList.remove('active');
+                    });
+                    
+                    // Show selected page
+                    const targetId = this.getAttribute('href').substring(1);
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+
+            // Set today's date as default in transaction form
+            document.getElementById('transactionDate').valueAsDate = new Date();
+            setupCategoryFiltering();
+            loadUsersForTransaction();
+        });
+
+        // User Selection Modal Functions
+        function openUserSelectionModal() {
+            document.getElementById('userSelectionModal').style.display = 'flex';
+            loadUsersModal();
+        }
+
+        function closeUserSelectionModal() {
+            document.getElementById('userSelectionModal').style.display = 'none';
+            selectedUserId = null;
+        }
+
+        function loadUsersModal() {
+            const usersList = document.getElementById('usersListModal');
+            usersList.innerHTML = '';
+            
+            allUsers.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-email">${user.email}</div>
+                    </div>
+                    <div class="user-role">${user.role}</div>
+                `;
+                
+                userItem.onclick = () => selectUserModal(user.id, userItem);
+                usersList.appendChild(userItem);
+            });
+        }
+
+        function selectUserModal(userId, element) {
+            selectedUserId = userId;
+            
+            // Remove selected class from all items
+            document.querySelectorAll('#usersListModal .user-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked item
+            element.classList.add('selected');
+        }
+
+        function filterUsersModal() {
+            const searchTerm = document.getElementById('userSearchModal').value.toLowerCase();
+            const filteredUsers = allUsers.filter(user => 
+                user.name.toLowerCase().includes(searchTerm) || 
+                user.email.toLowerCase().includes(searchTerm)
+            );
+            
+            const usersList = document.getElementById('usersListModal');
+            usersList.innerHTML = '';
+            
+            filteredUsers.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-name">${user.name}</div>
+                        <div class="user-email">${user.email}</div>
+                    </div>
+                    <div class="user-role">${user.role}</div>
+                `;
+                
+                userItem.onclick = () => selectUserModal(user.id, userItem);
+                usersList.appendChild(userItem);
+            });
+        }
+
+        function viewSelectedUserModal() {
+            if (!selectedUserId) {
+                alert('Please select a user first');
+                return;
+            }
+            
+            const user = allUsers.find(u => u.id === selectedUserId);
+            displayUserDetails(user);
+            closeUserSelectionModal();
+        }
+
+        function displayUserDetails(user) {
+            const container = document.getElementById('userDetailsContainer');
+            container.style.display = 'block';
+            container.innerHTML = `
+                <h3 style="margin-bottom: 15px; font-size: 20px; font-weight: 600;">User Details</h3>
+                <div class="user-details" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div><strong>ID:</strong> ${user.id}</div>
+                    <div><strong>Name:</strong> ${user.name}</div>
+                    <div><strong>Email:</strong> ${user.email}</div>
+                    <div><strong>Role:</strong> ${user.role}</div>
+                    <div><strong>Status:</strong> ${user.is_active ? 'Active' : 'Inactive'}</div>
+                    <div><strong>Joined:</strong> ${new Date(user.created_at).toLocaleDateString()}</div>
+                </div>
+                <button onclick="closeUserDetails()" class="cancel-btn">Close</button>
+            `;
+        }
+
+        function closeUserDetails() {
+            document.getElementById('userDetailsContainer').style.display = 'none';
+        }
+
+        // Transaction Modal Functions
+        function openTransactionModal() {
+            document.getElementById('transactionModal').style.display = 'flex';
+            document.getElementById('transactionDate').valueAsDate = new Date();
+        }
+
+        function closeTransactionModal() {
+            document.getElementById('transactionModal').style.display = 'none';
+            document.getElementById('transactionForm').reset();
+        }
+
+        function setupCategoryFiltering() {
+            const typeSelect = document.getElementById('transactionType');
+            const categorySelect = document.getElementById('category');
+            
+            typeSelect.addEventListener('change', function() {
+                const selectedType = this.value;
+                
+                // Show relevant categories
+                const categories = categorySelect.options;
+                for (let i = 0; i < categories.length; i++) {
+                    const option = categories[i];
+                    
+                    if (selectedType === 'income') {
+                        if (option.classList.contains('income-option') || option.classList.contains('both-option')) {
+                            option.style.display = 'block';
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    } else if (selectedType === 'expense') {
+                        if (option.classList.contains('expense-option') || option.classList.contains('both-option')) {
+                            option.style.display = 'block';
+                        } else {
+                            option.style.display = 'none';
+                        }
+                    } else {
+                        option.style.display = 'none';
+                    }
+                }
+                
+                // Reset to first option
+                categorySelect.value = '';
+            });
+        }
+
+        function loadUsersForTransaction() {
+            const userSelect = document.getElementById('userSelect');
+            userSelect.innerHTML = '<option value="">Choose a user...</option>';
+            
+            allUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.name} (${user.email})`;
+                userSelect.appendChild(option);
+            });
+        }
+
+        async function submitTransaction(event) {
+            event.preventDefault();
+            
+            const formData = {
+                user_id: document.getElementById('userSelect').value,
+                type: document.getElementById('transactionType').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value,
+                date: document.getElementById('transactionDate').value
+            };
+            
+            try {
+                alert('Transaction added successfully!');
+                closeTransactionModal();
+            } catch (error) {
+                console.error('Error adding transaction:', error);
+                alert('Error adding transaction. Please try again.');
+            }
+        }
+
+        // Close modals when clicking outside
+        document.getElementById('userSelectionModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeUserSelectionModal();
+            }
+        });
+
+        document.getElementById('transactionModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTransactionModal();
+            }
+        });
+    </script>
+</body>
+</html>
